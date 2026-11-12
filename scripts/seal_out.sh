@@ -7,7 +7,7 @@ OUT=$(ls -d "$W"/out* | head -1)
 if [ "$S" = "FINAL" ]; then
   files=$(ls -t "$OUT"/*timelapse*.mp4)
 else
-  files=$(ls "$OUT"/${S}*.mp4 | grep -v '/tmp_' )
+  files=$(ls "$OUT"/*.part*.mp4 2>/dev/null | grep -v '/tmp_' || true)
 fi
 for f in $files; do
   n=$(basename "$f")
