@@ -21,6 +21,9 @@ on:
         type: boolean
         default: true
 
+permissions:
+  contents: write
+
 jobs:
   chunk:
     runs-on: ubuntu-latest
@@ -81,3 +84,24 @@ jobs:
         run: bash scripts/seal_out.sh work FINAL
       - uses: actions/upload-artifact@v4
         with: { name: final, path: sealed/*.enc, retention-days: 7 }
+
+  publish:
+    # artifacts live on Azure blob storage, unreachable from some environments -> also push the sealed
+    # (encrypted) outputs to a throwaway branch out-<run_id> so they can be fetched with plain git.
+    if: ${{ always() && needs.chunk.result == 'success' }}
+    needs: [chunk, finalize]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { path: got, merge-multiple: true }
+      - name: Push sealed outputs to branch
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BR: out-${{ github.run_id }}
+        run: |
+          mkdir pub && cd pub && git init -q -b "$BR"
+          cp ../got/*.enc . 2>/dev/null || true
+          ls -la
+          git -c user.name=render-bot -c user.email=render-bot@users.noreply.github.com add -A
+          git -c user.name=render-bot -c user.email=render-bot@users.noreply.github.com commit -q -m "sealed outputs ${{ github.run_id }}"
+          git push -q "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" "$BR"
