@@ -1,0 +1,88 @@
+name: render
+
+on:
+  workflow_dispatch:
+    inputs:
+      bundle:
+        description: "Bundle id (file bundles/<id>.enc)"
+        required: true
+      scenes:
+        description: 'JSON list of scene names to render, e.g. ["s1_hook","s2_brief"]'
+        required: true
+      finalize:
+        description: "Concat all scenes (+ sfx) after rendering"
+        type: boolean
+        default: true
+      extra:
+        description: "Extra args for the renderer (e.g. --sharp for drafts)"
+        required: false
+        default: ""
+
+concurrency:
+  group: render-${{ inputs.bundle }}
+  cancel-in-progress: false
+
+jobs:
+  scene:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    strategy:
+      fail-fast: false
+      matrix:
+        scene: ${{ fromJSON(inputs.scenes) }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack
+        env:
+          RENDER_KEY: ${{ secrets.RENDER_KEY }}
+        run: bash scripts/unpack.sh "bundles/${{ inputs.bundle }}.enc" work
+      - name: Setup
+        run: bash scripts/setup.sh work
+      - name: Render scene
+        working-directory: work
+        run: python3 engine/render2.py --scene "${{ matrix.scene }}" ${{ inputs.extra }}
+      - name: Encrypt output
+        env:
+          RENDER_KEY: ${{ secrets.RENDER_KEY }}
+        run: bash scripts/seal_out.sh work "${{ matrix.scene }}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: scene-${{ matrix.scene }}
+          path: sealed/*.enc
+          retention-days: 3
+
+  finalize:
+    if: ${{ inputs.finalize }}
+    needs: scene
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Unpack
+        env:
+          RENDER_KEY: ${{ secrets.RENDER_KEY }}
+        run: bash scripts/unpack.sh "bundles/${{ inputs.bundle }}.enc" work
+      - name: Setup
+        run: bash scripts/setup.sh work --light
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: scene-*
+          path: sealed_in
+          merge-multiple: true
+      - name: Decrypt scenes into out/
+        env:
+          RENDER_KEY: ${{ secrets.RENDER_KEY }}
+        run: bash scripts/open_in.sh sealed_in work
+      - name: Concat + sfx
+        working-directory: work
+        run: |
+          python3 engine/render2.py --concat-only
+          if [ -f engine/sfx.py ]; then python3 engine/sfx.py; fi
+      - name: Encrypt final
+        env:
+          RENDER_KEY: ${{ secrets.RENDER_KEY }}
+        run: bash scripts/seal_out.sh work FINAL
+      - uses: actions/upload-artifact@v4
+        with:
+          name: final
+          path: sealed/*.enc
+          retention-days: 7
