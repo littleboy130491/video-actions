@@ -1,0 +1,48 @@
+/* engine shared look — BYGY timelapse (light Figma canvas; adapted from the BSB/AKR engine) */
+@font-face{font-family:"Montserrat";font-weight:700;src:url(../fonts/montserrat-latin-700-normal.woff2) format("woff2")}
+@font-face{font-family:"Poppins";font-weight:400;src:url(../fonts/poppins-latin-400-normal.woff2) format("woff2")}
+:root{--ink:#0B0B0C;--blue:#0D99FF;--red:#F24E1E;--teal:#2DB7BD;--gold:#DE9D27}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;width:1080px;height:1920px;overflow:hidden;background:#F5F5F5}
+#stage{position:absolute;left:0;top:0;width:1080px;height:1920px;overflow:hidden;background:#F5F5F5;
+  font-family:Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased;contain:strict}
+#world{position:absolute;left:0;top:0;transform-origin:0 0;backface-visibility:hidden}
+#world iframe{position:absolute;left:0;top:0;border:0;display:block;background:transparent}
+#world .shadow{position:absolute;left:0;top:0;background:#000;opacity:0}
+#ui{position:absolute;left:0;top:0;width:1080px;height:1920px;overflow:visible;pointer-events:none}
+#uih{position:absolute;inset:0;pointer-events:none}
+.k-pill{position:absolute;white-space:nowrap;font:500 18px/1 Inter;color:#fff;padding:5px 8px 6px;border-radius:4px;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em}
+.k-label{position:absolute;left:64px;top:140px;white-space:nowrap;font:500 28px/1.2 Inter;color:#fff;opacity:.6;
+  letter-spacing:.02em}
+.k-label .n{display:inline-block;margin-right:18px;font-variant-numeric:tabular-nums}
+.k-pop{position:absolute;width:248px;background:#fff;border-radius:12px;box-shadow:0 10px 32px rgba(0,0,0,.28),0 0 0 1px rgba(0,0,0,.06);
+  padding:14px;font:500 16px/1 Inter;color:#1e1e1e}
+.k-pop .hd{display:flex;justify-content:space-between;color:#1e1e1e;font-weight:600;font-size:15px;margin-bottom:12px}
+.k-pop .hd span:last-child{color:#999;font-weight:500}
+.k-pop .sq{height:132px;border-radius:6px;position:relative;margin-bottom:12px;
+  background:linear-gradient(0deg,#000,rgba(0,0,0,0)),linear-gradient(90deg,#fff,hsl(var(--hue,38),100%,50%))}
+.k-pop .sq i{position:absolute;width:14px;height:14px;border-radius:50%;border:2px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25);
+  transform:translate(-7px,-7px)}
+.k-pop .hue{height:10px;border-radius:5px;margin-bottom:12px;position:relative;
+  background:linear-gradient(90deg,#f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00)}
+.k-pop .hue i{position:absolute;top:-2px;width:14px;height:14px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.3);transform:translateX(-7px)}
+.k-pop .row{display:flex;align-items:center;gap:10px;height:32px;border-radius:5px;border:1px solid #e6e6e6;padding:0 8px}
+.k-pop .row .sw{width:16px;height:16px;border-radius:3px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.12)}
+.k-pop .row .hex{font:500 15px/1 Inter;letter-spacing:.02em;color:#1e1e1e;position:relative}
+.k-pop .row .hex.focus{outline:none}
+.k-pop .row .hex b{position:absolute;top:-2px;width:1.5px;height:19px;background:#0D99FF}
+.k-pop .row .pct{margin-left:auto;color:#888;font-size:14px}
+#cursor{position:absolute;left:0;top:0;width:0;height:0;pointer-events:none;will-change:transform}
+#cursor svg{position:absolute;left:0;top:0;overflow:visible}
+#cursor .tag{position:absolute;left:30px;top:40px;background:#2DB7BD;color:#fff;font:600 20px/1 Inter;
+  padding:7px 13px 8px;border-radius:999px;white-space:nowrap}
+/* light canvas extras */
+.k-chip{position:absolute;display:flex;align-items:center;gap:9px;height:38px;padding:0 12px 0 7px;background:#fff;border-radius:8px;
+  box-shadow:0 2px 10px rgba(0,0,0,.16),0 0 0 1px rgba(0,0,0,.07);font:500 18px/1 Inter;color:#1e1e1e;white-space:nowrap;
+  font-variant-numeric:tabular-nums;letter-spacing:.01em;transform-origin:0 0}
+.k-chip .sw{width:24px;height:24px;border-radius:5px;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1)}
+.k-chip .aa{width:24px;height:24px;border-radius:5px;background:#F2F2F2;display:flex;align-items:center;justify-content:center;font:700 14px/1 Montserrat,Inter}
+#cursor svg.eyedrop,#cursor svg.hand{display:none}
+.k-tool{position:absolute;height:52px;border-radius:12px;background:#fff;box-shadow:0 2px 12px rgba(0,0,0,.14),0 0 0 1px rgba(0,0,0,.06);
+  display:flex;align-items:center;padding:0 8px;gap:4px}
