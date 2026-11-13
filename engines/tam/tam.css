@@ -1,0 +1,17 @@
+@font-face{font-family:"Inter";font-weight:100 900;src:url(../fonts/inter-latin-wght-normal.woff2) format("woff2")}
+@font-face{font-family:"Arimo";font-weight:400;src:url(../fonts/arimo-latin-400-normal.woff2) format("woff2")}
+@font-face{font-family:"Arimo";font-weight:700;src:url(../fonts/arimo-latin-700-normal.woff2) format("woff2")}
+html,body{margin:0;padding:0;width:1080px;height:1920px;overflow:hidden;background:#0A0A0A}
+*{box-sizing:border-box}
+#stage{position:absolute;left:0;top:0;width:1080px;height:1920px;overflow:hidden;-webkit-font-smoothing:antialiased;background:#0A0A0A}
+#sky{position:absolute;inset:0}
+#view{position:absolute;inset:0;perspective:2400px;perspective-origin:540px 960px;transform-style:preserve-3d}
+#world{position:absolute;left:540px;top:960px;width:0;height:0;transform-style:preserve-3d}
+#over{position:absolute;inset:0;pointer-events:none}
+.o{position:absolute;left:0;top:0;transform-style:preserve-3d}
+.f{position:absolute}
+.cur{position:absolute;left:0;top:0;width:0;height:0}
+.gw{position:absolute;white-space:nowrap;font-family:Inter;font-weight:600;letter-spacing:-.055em;line-height:.8;color:#FDFDFD}
+.gw .m{display:inline-block;overflow:hidden;vertical-align:top;padding:0 .02em .04em}
+.gw .m>span{display:inline-block}
+.lbl{position:absolute;font:600 19px Inter;letter-spacing:.02em;color:#FDFDFD;white-space:nowrap}
