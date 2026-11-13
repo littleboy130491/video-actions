@@ -2,3 +2,4 @@ work/
 sealed/
 sealed_in/
 .render_key
+__pycache__/

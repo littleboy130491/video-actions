@@ -77,8 +77,15 @@ jobs:
         working-directory: work
         run: |
           bash ../scripts/join_parts.sh .
-          python3 engine*/render2.py --concat-only
-          if ls out*/sfx_events.json >/dev/null 2>&1; then for s in engine*/sfx.py; do [ -f "$s" ] && python3 "$s"; done; else echo "no sfx_events.json in bundle: skipping sfx (render a local --draft first)"; fi
+          if [ -f video.json ]; then
+            # project config bundle: shared core renderer
+            python3 ../core/render.py --project . --concat-only
+            if ls out*/sfx_events.json >/dev/null 2>&1; then python3 ../core/sfx.py --project .; else echo "no sfx_events.json in bundle: skipping sfx (render a local --draft first)"; fi
+          else
+            # legacy bundle: the project's own engine
+            python3 engine*/render2.py --concat-only
+            if ls out*/sfx_events.json >/dev/null 2>&1; then for s in engine*/sfx.py; do [ -f "$s" ] && python3 "$s"; done; else echo "no sfx_events.json in bundle: skipping sfx (render a local --draft first)"; fi
+          fi
       - name: Encrypt final
         env: { RENDER_KEY: "${{ secrets.RENDER_KEY }}" }
         run: bash scripts/seal_out.sh work FINAL

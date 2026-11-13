@@ -1,0 +1,23 @@
+{
+  "name": "akr",
+  "order": [
+    "s1_hook",
+    "s2_brief",
+    "s3_hero",
+    "s4_sections",
+    "s5_detail",
+    "s6_reveal",
+    "s7_outro_client"
+  ],
+  "prebuilt": {
+    "s7_outro_client": 6.5
+  },
+  "final": "akr_timelapse_v4.mp4",
+  "draft_final": "akr_draft.mp4",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "port": 8765,
+  "fonts": [],
+  "out": "out2"
+}

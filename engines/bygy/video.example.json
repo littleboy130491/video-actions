@@ -1,0 +1,23 @@
+{
+  "name": "bygy",
+  "order": [
+    "h0_hook",
+    "p5_take1",
+    "b_brief",
+    "p5_take2",
+    "p5_take3",
+    "m_pages",
+    "e_scroll",
+    "outro_client"
+  ],
+  "prebuilt": {
+    "outro_client": 6.5
+  },
+  "final": "bygy_v6_final.mp4",
+  "draft_final": "bygy_v5_draft.mp4",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "port": 8771,
+  "fonts": []
+}

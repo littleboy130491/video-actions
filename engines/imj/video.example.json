@@ -1,0 +1,20 @@
+{
+  "name": "imj",
+  "order": [
+    "h5_hook",
+    "p5_masonry",
+    "s5_helps",
+    "e5_stats",
+    "outro"
+  ],
+  "prebuilt": {
+    "outro": 6.5
+  },
+  "final": "imj_final.mp4",
+  "draft_final": "imj_draft6.mp4",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "port": 8774,
+  "fonts": []
+}

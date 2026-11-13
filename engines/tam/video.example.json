@@ -1,0 +1,26 @@
+{
+  "name": "tam",
+  "order": [
+    "o_open",
+    "b_brief",
+    "p_take",
+    "m_pages",
+    "e_scroll",
+    "outro_client"
+  ],
+  "prebuilt": {
+    "outro_client": 6.5
+  },
+  "final": "tam_final.mp4",
+  "draft_final": "tam_draft3.mp4",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "port": 8773,
+  "fonts": [
+    "fonts/inter-latin-wght-normal.woff2",
+    "fonts/roboto-latin-400-normal.woff2",
+    "fonts/arimo-latin-400-normal.woff2",
+    "fonts/arimo-latin-700-normal.woff2"
+  ]
+}

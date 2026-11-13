@@ -1,0 +1,22 @@
+{
+  "name": "bsb",
+  "order": [
+    "s1_hook",
+    "s2_brief",
+    "s3_hero",
+    "s4_sections",
+    "s5_detail",
+    "s6_reveal",
+    "outro_client"
+  ],
+  "prebuilt": {
+    "outro_client": 6.5
+  },
+  "final": "bsb_timelapse.mp4",
+  "draft_final": "bsb_draft.mp4",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "port": 8765,
+  "fonts": []
+}
