@@ -31,7 +31,7 @@ ORDER = ["h0_hook", "p5_take1", "b_brief", "p5_take2", "p5_take3", "m_pages", "e
 # with the same libx264 settings as the scene files (High, crf 18, veryfast, yuv420p, 30 fps, timebase 1/15360)
 # so concat -c copy works
 PREBUILT = {"outro_client": 6.5}
-FINAL = "bygy_v5_final.mp4"
+FINAL = "bygy_v6_final.mp4"
 DRAFT_FINAL = "bygy_v5_draft.mp4"
 DRAFT = False          # --draft: one sample per frame (N=1), no shutter; scene files out/draft_<name>.mp4
 

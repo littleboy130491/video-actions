@@ -85,8 +85,8 @@ def main():
     with wave.open(str(wav), "wb") as w:
         w.setnchannels(1); w.setsampwidth(2); w.setframerate(SR); w.writeframes(pcm.tobytes())
     draft = "--draft" in sys.argv
-    src = OUT / ("bygy_v5_draft.mp4" if draft else "bygy_v5_final.mp4")
-    dst = OUT / ("bygy_v5_draft.mp4" if draft else "bygy_v5_final_sfx.mp4")
+    src = OUT / ("bygy_v5_draft.mp4" if draft else "bygy_v6_final.mp4")
+    dst = OUT / ("bygy_v5_draft.mp4" if draft else "bygy_v6_final_sfx.mp4")
     tmp = OUT / ("tmp_sfx_" + dst.name)
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src), "-i", str(wav),
                     "-filter_complex", "[1:a]loudnorm=I=-24:TP=-3:LRA=11,aresample=48000,volume=-2.7dB,pan=stereo|c0=c0|c1=c0[a]",

@@ -273,10 +273,10 @@ function buildBeranda(T, S, q) {
   if (T > 15.58) {
     const tr = q('marquee-track'), sp = T < 16.42 ? 0 : 0.5 * 140 * Math.pow(Math.min(T - 16.42, .8), 2) / .8 + 140 * Math.max(0, T - 17.22);
     V.st(tr, { opacity: '1', transform: `translateX(${f2(-(sp % 532))}px)` });
-    for (const id of ['marquee-text-1', 'marquee-text-3', 'marquee-icon-1', 'marquee-icon-2', 'marquee-icon-3']) V.st(q(id), { opacity: '0' });
+    for (const id of ['marquee-text-1', 'marquee-text-3', 'marquee-text-4', 'marquee-text-5', 'marquee-icon-1', 'marquee-icon-2', 'marquee-icon-3', 'marquee-icon-4', 'marquee-icon-5']) V.st(q(id), { opacity: '0' });
     V.typeEl(q('marquee-text-2'), S.tyMq.at(T - 15.6), T < 16.42 && V.blink(T, 16.25));
     rv(q('marquee-icon-2'), T, 16.3, 'pop', { d: .22 });
-    for (const [id, t0] of [['marquee-icon-1', 16.42], ['marquee-text-1', 16.42], ['marquee-text-3', 16.47], ['marquee-icon-3', 16.47]]) rv(q(id), T, t0, 'fade', { d: .15 });
+    for (const [id, t0] of [['marquee-icon-1', 16.42], ['marquee-text-1', 16.42], ['marquee-text-3', 16.47], ['marquee-icon-3', 16.47], ['marquee-text-4', 16.5], ['marquee-icon-4', 16.5], ['marquee-text-5', 16.52], ['marquee-icon-5', 16.52]]) rv(q(id), T, t0, 'fade', { d: .15 });
   }
   // instagram
   rv(q('ig-bg'), T, 16.95, 'fade', { d: .25 });
