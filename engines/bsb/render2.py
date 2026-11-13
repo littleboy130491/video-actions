@@ -96,6 +96,7 @@ class Renderer:
 
 SHUTTER = 1 / 60      # 180 degree shutter at 30 fps
 MAX_N = 128            # max sub-samples per output frame
+MIN_N = 4              # min sub-samples whenever anything changed
 STEP_PX = 2.0          # max screen distance between two sub-samples (no visible double edges)
 SETTLE_ALL = False     # settle-check every sub-sample (slow); default: first + last sample of each frame
 
@@ -133,8 +134,10 @@ def image_motion(a, b):
     """estimate screen displacement (px) between two frames; returns (px, changed)"""
     A, B = _small(a), _small(b)
     d = np.abs(A - B)
-    if np.percentile(d, 99.5) < 3.0:
+    if d.max() < 2.0:                      # truly static (any small mover also counts as change)
         return 0.0, False
+    if np.percentile(d, 99.5) < 3.0:       # only a small area changed: phase correlation can't see it
+        return 40.0, True
     win = np.outer(np.hanning(480), np.hanning(270))
     FA, FB = np.fft.rfft2((A - A.mean()) * win), np.fft.rfft2((B - B.mean()) * win)
     Rr = FA * np.conj(FB)
@@ -172,8 +175,8 @@ def shutter_frame(R, t, dur, has_motion, cuts=()):
     a, b = grab(R, t0), grab(R, t1)
     px, changed = image_motion(a, b)
     if not changed:
-        return (a + b) / 2, 2
-    n = int(min(MAX_N, max(2, np.ceil(px / STEP_PX) + 1)))
+        return grab(R, t, settle=True), 1   # static: one sharp sample, never a 2-sample blend
+    n = int(min(MAX_N, max(MIN_N, np.ceil(px / STEP_PX) + 1)))
     times = [t0 + k / (n - 1) * (t1 - t0) for k in range(n)]
     acc = a + b
     for x in times[1:-1]:

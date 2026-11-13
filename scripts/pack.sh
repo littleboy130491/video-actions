@@ -8,7 +8,7 @@ T=$(mktemp -d)
 cp -r "$P"/{engine,scenes,design,assets,fonts} "$T"/ 2>/dev/null || true
 [ -d "$P/engine2" ] && cp -r "$P/engine2" "$T"/
 for o in out out2; do
-  if [ -d "$P/$o" ]; then mkdir -p "$T/$o"; find "$P/$o" -maxdepth 1 -name '*outro*client*.mp4' -exec cp {} "$T/$o"/ \; ; fi
+  if [ -d "$P/$o" ]; then mkdir -p "$T/$o"; find "$P/$o" -maxdepth 1 \( -name '*outro*.mp4' -o -name 'sfx_events.json' \) -exec cp {} "$T/$o"/ \; ; fi
 done
 mkdir -p "$T/ci_fonts"; cp /usr/share/fonts/opentype/inter/Inter-{Regular,Medium,SemiBold,Bold}.otf "$T/ci_fonts"/ 2>/dev/null || true
 rm -rf "$T/scenes/akr_reference"

@@ -78,7 +78,7 @@ jobs:
         run: |
           bash ../scripts/join_parts.sh .
           python3 engine*/render2.py --concat-only
-          for s in engine*/sfx.py; do [ -f "$s" ] && python3 "$s"; done
+          if ls out*/sfx_events.json >/dev/null 2>&1; then for s in engine*/sfx.py; do [ -f "$s" ] && python3 "$s"; done; else echo "no sfx_events.json in bundle: skipping sfx (render a local --draft first)"; fi
       - name: Encrypt final
         env: { RENDER_KEY: "${{ secrets.RENDER_KEY }}" }
         run: bash scripts/seal_out.sh work FINAL

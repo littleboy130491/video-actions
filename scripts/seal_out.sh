@@ -5,7 +5,8 @@ set -euo pipefail
 W="$1"; S="$2"; mkdir -p sealed
 OUT=$(ls -d "$W"/out* | head -1)
 if [ "$S" = "FINAL" ]; then
-  files=$(ls -t "$OUT"/*timelapse*.mp4)
+  files=$(ls -t "$OUT"/*timelapse*.mp4 "$OUT"/*_final*.mp4 2>/dev/null | grep -v '/tmp_' || true)
+  [ -n "$files" ] || { echo "no final mp4 in $OUT"; exit 1; }
 else
   files=$(ls "$OUT"/*.part*.mp4 2>/dev/null | grep -v '/tmp_' || true)
 fi
