@@ -1,0 +1,64 @@
+<!doctype html>
+<!-- adapted from HyperFrames blocks "zoom-through-transition" and "whip-pan-cut", Apache-2.0 (see templates/NOTICE).
+     Two full-frame layers (A -> B) joined by TX.apply('zoom' | 'whip'). Copy to <project>/scenes/, put kit.js,
+     tpl.js and transition.js in <project>/engine/, edit window.PARAMS below (or ?p={json} / ?type=whip for tests). -->
+<html lang="en"><head><meta charset="utf-8"><title>Transition</title>
+<script src="../engine/kit.js"></script><script src="../engine/tpl.js"></script><script src="../engine/transition.js"></script>
+<style>
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#000}
+.layer{position:absolute;left:0;top:0;width:1080px;height:1920px;overflow:hidden;will-change:transform,filter}
+.layer img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.cap{position:absolute;left:96px;right:96px;bottom:300px;font-weight:700;line-height:1.02;letter-spacing:-.03em}
+.sub{margin-top:28px;font-weight:400;font-size:44px;line-height:1.25;letter-spacing:0;opacity:.85}
+</style></head><body>
+<script>
+/* ---- PARAMS (edit in your copy) ---- */
+window.PARAMS = window.PARAMS || {};
+</script>
+<script>
+const P = T.params({
+  duration: 3,
+  type: 'zoom',                 // 'zoom' (zoom-through) | 'whip' (whip-pan)
+  at: 0.9, dur: 0.75,           // transition start / length (s); whip reads best at 0.45-0.6
+  dir: 'left',                  // whip: left | right | up | down
+  seam: '',                     // whip: accent hairline colour on the seam ('' = none)
+  blur: null,                   // px; null = type default (zoom 18, whip 12)
+  depth: 1, focal: null,        // zoom: push strength; focal point [x, y] (default centre)
+  font: 'system-ui, sans-serif', fonts: [],     // fonts: [{family, url, weight}]
+  a: { bg: '#0E2A47', image: '', title: 'Before', sub: '', color: '#ffffff', size: 150 },
+  b: { bg: '#F4F1EA', image: '', title: 'After', sub: '', color: '#0E2A47', size: 150 },
+});
+T.scene({
+  duration: P.duration, fonts: P.fonts,
+  setup() {
+    document.body.style.fontFamily = P.font;
+    const mk = (L) => {
+      const el = T.el('div', document.body, { cls: 'layer', css: `background:${L.bg}` });
+      if (L.image) T.el('img', el, { attrs: { src: L.image, alt: '' } });
+      if (L.title || L.sub) {
+        const c = T.el('div', el, { cls: 'cap', css: `color:${L.color};font-size:${L.size}px`, text: L.title || '' });
+        if (L.sub) T.el('div', c, { cls: 'sub', text: L.sub });
+      }
+      return el;
+    };
+    return { A: mk(P.a), B: mk(P.b) };
+  },
+  o() { return { dir: P.dir, seam: P.seam, blur: P.blur == null ? undefined : P.blur, depth: P.depth,
+                 x: P.focal ? P.focal[0] : undefined, y: P.focal ? P.focal[1] : undefined }; },
+  frame(t, st) {
+    // slow life on the resting layers so the cut never starts from a dead frame
+    TX.apply(P.type, st.A, st.B, TX.at(t, P.at, P.dur), this.o());
+    const k = 1 + .03 * K.ramp(t, 0, P.at, 'linear');
+    const img = st.A.querySelector('img'); if (img) img.style.transform = `scale(${T.f(k)})`;
+    const k2 = 1.03 - .03 * K.ramp(t, P.at, P.duration, 'outCubic');
+    const img2 = st.B.querySelector('img'); if (img2) img2.style.transform = `scale(${T.f(k2)})`;
+  },
+  motion(a, b) {
+    const ka = 1 + .03 * K.ramp(a, 0, P.at, 'linear'), kb = 1 + .03 * K.ramp(b, 0, P.at, 'linear');
+    const ca = 1.03 - .03 * K.ramp(a, P.at, P.duration, 'outCubic'), cb = 1.03 - .03 * K.ramp(b, P.at, P.duration, 'outCubic');
+    return Math.max(TX.px(P.type, TX.at(a, P.at, P.dur), TX.at(b, P.at, P.dur), this.o()),
+                    (Math.abs(kb - ka) + Math.abs(cb - ca)) * 1100);   // image drift (corner distance ~1100 px)
+  },
+});
+</script>
+</body></html>

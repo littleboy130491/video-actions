@@ -1,0 +1,209 @@
+<!doctype html>
+<!-- adapted from HyperFrames blocks "chat-thread" / "chat-message", Apache-2.0 (see templates/NOTICE).
+     A full-frame chat conversation: bubbles pop in from the sender's corner, a typing indicator holds the beat
+     before every received message (header says "typing..."), sent messages can be typed into the input bar
+     first, the thread scrolls up as it fills. Themes: 'whatsapp' (WhatsApp-style, generic look, no logos) and
+     'imessage'. Copy to <project>/scenes/, kit.js + tpl.js into <project>/engine/, edit PARAMS. -->
+<html lang="en"><head><meta charset="utf-8"><title>Chat thread</title>
+<script src="../engine/kit.js"></script><script src="../engine/tpl.js"></script>
+<style>
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:var(--wall)}
+*{box-sizing:border-box}
+#sb{position:absolute;left:0;right:0;top:0;height:78px;display:flex;align-items:center;justify-content:space-between;
+  padding:0 52px;font-weight:600;font-size:34px;color:var(--sbInk);background:var(--sbBg);z-index:3}
+#sb .ic{display:flex;gap:12px;align-items:flex-end}#sb .ic i{display:block;width:9px;background:var(--sbInk);border-radius:2px}
+#sb .bat{width:52px!important;height:24px;border:3px solid var(--sbInk);background:none!important;border-radius:7px!important;position:relative}
+#sb .bat::after{content:"";position:absolute;left:3px;top:3px;bottom:3px;width:70%;background:var(--sbInk);border-radius:2px}
+#hd{position:absolute;left:0;right:0;top:78px;z-index:3;background:var(--hdBg);color:var(--hdInk)}
+.av{border-radius:50%;overflow:hidden;display:flex;align-items:center;justify-content:center;font-weight:600;color:#fff;background:var(--avBg)}
+.av img{width:100%;height:100%;object-fit:cover;display:block}
+#th{position:absolute;left:0;right:0;overflow:hidden;z-index:1}
+#ct{position:absolute;left:0;right:0;top:0;padding:28px 34px;display:flex;flex-direction:column;gap:14px;will-change:transform}
+.row{display:flex;width:100%}.row.me{justify-content:flex-end}
+.bub{position:relative;max-width:78%;font-size:var(--fs);line-height:1.32;padding:var(--pad);border-radius:var(--rad);
+  color:var(--themInk);background:var(--themBg);box-shadow:var(--shadow);white-space:pre-wrap;overflow-wrap:anywhere}
+.me .bub{color:var(--meInk);background:var(--meBg)}
+.them .bub{border-top-left-radius:var(--tail)}.me .bub{border-top-right-radius:var(--tail)}
+.ims .them .bub{border-top-left-radius:var(--rad);border-bottom-left-radius:var(--tail)}
+.ims .me .bub{border-top-right-radius:var(--rad);border-bottom-right-radius:var(--tail)}
+.meta{float:right;margin:14px 0 -8px 18px;font-size:24px;line-height:1;color:var(--metaInk);white-space:nowrap}
+.tick{color:#53BDEB;letter-spacing:-.32em;margin-left:6px;font-weight:700}
+#typ{position:absolute;left:34px;padding:30px 34px;border-radius:var(--rad);border-top-left-radius:var(--tail);
+  background:var(--themBg);box-shadow:var(--shadow);display:flex;gap:12px;z-index:2}
+.ims #typ{border-top-left-radius:var(--rad);border-bottom-left-radius:var(--tail)}
+#typ i{display:block;width:18px;height:18px;border-radius:50%;background:var(--dot)}
+#in{position:absolute;left:0;right:0;bottom:0;z-index:3;background:var(--inBar);display:flex;align-items:center;gap:18px;padding:18px 26px 54px}
+#field{flex:1;min-height:92px;border-radius:46px;background:var(--fieldBg);border:var(--fieldBorder);display:flex;align-items:center;
+  padding:0 36px;font-size:38px;color:var(--fieldInk);white-space:nowrap;overflow:hidden}
+#field .ph{color:var(--phInk)}#field .caret{display:inline-block;width:3px;height:44px;background:var(--caret);margin-left:2px;vertical-align:middle}
+#send{width:92px;height:92px;border-radius:50%;background:var(--sendBg);position:relative;flex:none}
+#send::after{content:"";position:absolute;left:31px;top:26px;width:38px;height:40px;background:#fff;clip-path:polygon(0 0,100% 50%,0 100%,14% 50%)}
+.ims #send::after{left:27px;top:24px;width:38px;height:44px;clip-path:polygon(50% 0,100% 50%,64% 50%,64% 100%,36% 100%,36% 50%,0 50%)}
+</style></head><body>
+<div id="sb"><span id="clock"></span><span class="ic"><i style="height:14px"></i><i style="height:20px"></i><i style="height:26px"></i><i style="height:32px"></i><i class="bat"></i></span></div>
+<div id="hd"></div><div id="th"><div id="ct"></div><div id="typ"><i></i><i></i><i></i></div></div>
+<div id="in"><div id="field"></div><div id="send"></div></div>
+<script>
+/* ---- PARAMS (edit in your copy) ---- */
+window.PARAMS = window.PARAMS || {};
+</script>
+<script>
+const P = T.params({
+  duration: 9,
+  theme: 'whatsapp',            // 'whatsapp' | 'imessage'
+  contact: 'Alex', status: 'online', avatar: '',    // avatar image URL ('' = initial letter)
+  clock: '9:41', stamp: '09:41', // status-bar clock; bubble timestamps (whatsapp)
+  messages: [                   // {from: 'them' | 'me', text, at?} at = arrival time (s); omitted = auto by beat
+    { from: 'them', text: 'Hi! Is the new site live yet?' },
+    { from: 'me', text: 'Launching this week' },
+    { from: 'them', text: 'Can you send me a preview?' },
+    { from: 'me', text: 'Sending the link now' },
+  ],
+  start: 0.4, beat: 0.9,        // first action / pause after each arrival (s)
+  typing: 1.0,                  // typing-indicator length before each received message (s; 0 = none)
+  typeMine: true, cps: 26,      // type sent messages into the input bar first, characters per second
+  fontSize: 46, font: '-apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif', fonts: [],
+  colors: {},                   // override any theme colour below, e.g. {"meBg": "#DCF8C6"}
+});
+const THEMES = {
+  whatsapp: { wall: '#EFE7DE', sbBg: '#008069', sbInk: '#fff', hdBg: '#008069', hdInk: '#fff', avBg: '#7FA8B8',
+    themBg: '#ffffff', themInk: '#111B21', meBg: '#D9FDD3', meInk: '#111B21', metaInk: '#667781', dot: '#8696A0',
+    inBar: 'transparent', fieldBg: '#ffffff', fieldBorder: 'none', fieldInk: '#111B21', phInk: '#8696A0', caret: '#00A884',
+    sendBg: '#00A884', shadow: '0 1.5px .5px rgba(11,20,26,.13)', rad: '22px', tail: '4px', pad: '16px 24px 18px' },
+  imessage: { wall: '#ffffff', sbBg: '#F6F6F6', sbInk: '#000', hdBg: '#F6F6F6', hdInk: '#000', avBg: '#A5ABB7',
+    themBg: '#E9E9EB', themInk: '#000', meBg: '#0A84FF', meInk: '#fff', metaInk: '#8E8E93', dot: '#8E8E93',
+    inBar: '#ffffff', fieldBg: '#ffffff', fieldBorder: '2px solid #D1D1D6', fieldInk: '#000', phInk: '#B4B4B9', caret: '#0A84FF',
+    sendBg: '#0A84FF', shadow: 'none', rad: '40px', tail: '10px', pad: '18px 30px 20px' },
+};
+const C = { ...(THEMES[P.theme] || THEMES.whatsapp), ...P.colors };
+const WA = P.theme !== 'imessage';
+// ---- schedule (static): arrival, typing window, input typing window per message ----
+const SCH = [];
+{
+  let prev = P.start;
+  P.messages.forEach((m, i) => {
+    const them = m.from !== 'me';
+    const lead = them ? P.typing : (P.typeMine ? m.text.length / P.cps + .3 : 0);
+    const at = m.at != null ? m.at : (i === 0 ? prev + lead : prev + P.beat + lead);
+    SCH.push({ them, at, t0: at - lead, t1: them ? at : at - .3 });
+    prev = at;
+  });
+}
+const POP = .2;
+T.scene({
+  duration: P.duration, fonts: P.fonts,
+  async setup() {
+    const B = document.body;
+    for (const k in C) B.style.setProperty('--' + k, C[k]);
+    B.style.setProperty('--fs', P.fontSize + 'px');
+    B.style.fontFamily = P.font;
+    if (!WA) B.classList.add('ims');
+    document.getElementById('clock').textContent = P.clock;
+    // header
+    const hd = document.getElementById('hd');
+    const av = (sz) => {
+      const a = T.el('div', null, { cls: 'av', css: `width:${sz}px;height:${sz}px;font-size:${sz * .44}px;flex:none` });
+      if (P.avatar) T.el('img', a, { attrs: { src: P.avatar, alt: '' } }); else a.textContent = (P.contact || '?').trim().charAt(0).toUpperCase();
+      return a;
+    };
+    let statusEl;
+    if (WA) {
+      hd.style.cssText += ';height:150px;display:flex;align-items:center;gap:22px;padding:0 30px';
+      T.el('div', hd, { css: 'width:26px;height:26px;border-left:5px solid currentColor;border-bottom:5px solid currentColor;transform:rotate(45deg);margin:0 6px 0 14px' });
+      hd.appendChild(av(92));
+      const nm = T.el('div', hd, {});
+      T.el('div', nm, { text: P.contact, css: 'font-size:42px;font-weight:600;line-height:1.2' });
+      statusEl = T.el('div', nm, { text: P.status, css: 'font-size:30px;opacity:.85;line-height:1.3' });
+    } else {
+      hd.style.cssText += ';height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;border-bottom:1.5px solid #E2E2E6';
+      hd.appendChild(av(112));
+      T.el('div', hd, { text: P.contact, css: 'font-size:30px;font-weight:500' });
+      statusEl = { textContent: '' };             // iMessage shows typing only as the bubble
+    }
+    const top = 78 + (WA ? 150 : 220), inH = 164;
+    const th = document.getElementById('th');
+    th.style.top = top + 'px'; th.style.height = (1920 - top - inH) + 'px';
+    if (WA) th.style.backgroundImage = 'radial-gradient(rgba(0,0,0,.035) 2.5px, transparent 3px)', th.style.backgroundSize = '46px 46px';
+    // bubbles (laid out once, measured; seek only transforms)
+    const ct = document.getElementById('ct');
+    const rows = P.messages.map((m) => {
+      const r = T.el('div', ct, { cls: 'row ' + (m.from === 'me' ? 'me' : 'them') });
+      const b = T.el('div', r, { cls: 'bub' });
+      b.appendChild(document.createTextNode(m.text));
+      if (WA) { const mt = T.el('span', b, { cls: 'meta', text: P.stamp }); if (m.from === 'me') T.el('span', mt, { cls: 'tick', text: '✓✓' }); }
+      return { r, b };
+    });
+    await T.images(document.body);
+    const typ = document.getElementById('typ');
+    const padT = 28, gap = 14, Hv = th.clientHeight - 24;
+    const tH = typ.offsetHeight;
+    // events: (time, content bottom that must be visible)
+    const ev = [];
+    rows.forEach((x, i) => {
+      x.top = x.r.offsetTop; x.h = x.r.offsetHeight; x.w = x.b.offsetWidth;
+      const s = SCH[i];
+      if (s.them && P.typing > 0) ev.push([s.t0, x.top + tH]);
+      ev.push([s.at, x.top + x.h]);
+      x.b.style.transformOrigin = s.them ? (WA ? '0 0' : '0 100%') : (WA ? '100% 0' : '100% 100%');
+    });
+    ev.sort((a, b) => a[0] - b[0]);
+    let cur = 0; const steps = [];
+    for (const [t, bottom] of ev) { const tg = Math.max(cur, bottom + padT - Hv); if (tg > cur) { steps.push([t, tg - cur]); cur = tg; } }
+    return { rows, typ, statusEl, field: document.getElementById('field'), ct, steps, padT, gap };
+  },
+  scroll(t, S) { let y = 0; for (const [t0, d] of S.steps) y += d * K.ramp(t, t0, t0 + .45, 'outCubic'); return y; },
+  frame(t, S, tc) {
+    S.ct.style.transform = `translate3d(0,${T.f(-this.scroll(t, S))}px,0)`;
+    let typing = -1;
+    S.rows.forEach((x, i) => {
+      const s = SCH[i], u = K.ramp(t, s.at, s.at + POP, 'outCubic');
+      const on = tc >= s.at;
+      x.r.style.visibility = on ? 'visible' : 'hidden';
+      x.b.style.transform = `scale(${T.f(.75 + .25 * u)})`;
+      x.b.style.opacity = T.f(K.ramp(t, s.at, s.at + .08, 'linear'));
+      if (s.them && P.typing > 0 && tc >= s.t0 && tc < s.at) typing = i;
+    });
+    // typing indicator (received messages): sits where the next bubble lands, dots bounce
+    S.typ.style.visibility = typing >= 0 ? 'visible' : 'hidden';
+    if (typing >= 0) {
+      const s = SCH[typing], u = K.ramp(t, s.t0, s.t0 + POP, 'outCubic');
+      S.typ.style.top = `${S.rows[typing].top - this.scroll(t, S)}px`;
+      S.typ.style.transformOrigin = WA ? '0 0' : '0 100%';
+      S.typ.style.transform = `scale(${T.f(.75 + .25 * u)})`;
+      [...S.typ.children].forEach((d, k) => {
+        const ph = (t - s.t0) * 2 * Math.PI * 1.6 - k * .9;
+        const w = Math.max(0, Math.sin(ph));
+        d.style.transform = `translateY(${T.f(-9 * w)}px)`;
+        d.style.opacity = T.f(.45 + .55 * w);
+      });
+    }
+    // header status
+    S.statusEl.textContent = typing >= 0 ? 'typing…' : (WA ? P.status : '');
+    // input bar: sent messages typed in (by tc, never half a character), cleared on send
+    let txt = '', act = false;
+    SCH.forEach((s, i) => {
+      if (!s.them && P.typeMine && tc >= s.t0 && tc < s.at) {
+        const m = P.messages[i].text; act = true;
+        txt = m.slice(0, Math.min(m.length, Math.floor((tc - s.t0) * P.cps + 1e-6)));
+      }
+    });
+    const blink = Math.floor(tc * 2.2) % 2 === 0;
+    S.field.innerHTML = '';
+    if (act) { S.field.appendChild(document.createTextNode(txt)); if (blink) T.el('span', S.field, { cls: 'caret' }); }
+    else T.el('span', S.field, { cls: 'ph', text: WA ? 'Message' : 'iMessage' });
+  },
+  motion(a, b, S) {
+    let d = Math.abs(this.scroll(b, S) - this.scroll(a, S));
+    S.rows.forEach((x, i) => {
+      const s = SCH[i], ua = K.ramp(a, s.at, s.at + POP, 'outCubic'), ub = K.ramp(b, s.at, s.at + POP, 'outCubic');
+      d = Math.max(d, Math.abs(ub - ua) * .25 * Math.hypot(x.w, x.h));
+      if (s.them && P.typing > 0) {
+        const va = K.ramp(a, s.t0, s.t0 + POP, 'outCubic'), vb = K.ramp(b, s.t0, s.t0 + POP, 'outCubic');
+        d = Math.max(d, Math.abs(vb - va) * .25 * 200, (a < s.at && b > s.t0) ? 9 * 2 * Math.PI * 1.6 * Math.abs(b - a) : 0);
+      }
+    });
+    return d;
+  },
+});
+</script>
+</body></html>

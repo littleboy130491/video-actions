@@ -42,3 +42,26 @@ requests them (any font request that 404s stops the render naming the file).
 
 CI: `scripts/pack.sh` includes `video.json`; when a bundle has one, `scripts/render_chunk.py`, the finalize step and
 `scripts/seal_out.sh` use `core/` (out dir + final name from the config), otherwise the project's own `engine*/render2.py`.
+
+## Studio preview (HyperFrames, preview only)
+`tools/studio/studio.py` opens a project in HyperFrames Studio (`hyperframes@0.9.41`, Apache-2.0, installed into
+`tools/studio/node_modules` on first run, gitignored). Final renders stay on `core/render.py`.
+```
+python3 tools/studio/studio.py --project P --scene e5_stats   # LIVE scene: scrub/inspect it through its own seek(t)
+python3 tools/studio/studio.py --project P                    # whole order as clips of the rendered <out>/*.mp4
+python3 tools/studio/studio.py --project P --scene e5 --workdir /tmp/ws --port 3017 [--no-preview] [--foreground]
+```
+It builds a throwaway workspace outside P (P is only read): a copy of the scene with `tools/studio/shim.js` injected
+(composition attributes on `<body>`, `window.ready` -> HF build-ready, `hf-seek` -> `await window.seek(t)`), P's
+dirs symlinked beside it (`../` URLs in the scene and engine JS are rewritten, since Studio pins `<base>` to the
+project root), then starts `hyperframes preview` in the background and prints the Studio URL (`...#project/<ws>`;
+`?t=1.5` in the hash opens at that time) and the stop command. Env defaults: `HYPERFRAMES_BROWSER_PATH=
+/usr/bin/google-chrome`, `HYPERFRAMES_NO_TELEMETRY=1`. HyperFrames mounts sub-compositions inline in one document,
+so our scenes cannot be nested live; the whole-order view therefore sequences rendered files (`<name>.mp4`, else
+`draft_<name>.mp4`, prebuilt as configured). Studio lint flags (`requestAnimationFrame`, template-literal
+selectors) are harmless for preview.
+
+## templates/
+Restyled HyperFrames blocks as deterministic scenes on our contract (zoom-through + whip-pan transition module,
+odometer stats counter, browser/phone page scroll, chat thread with typing indicator): see `templates/README.md`
+(params) and `templates/NOTICE` (Apache-2.0 attribution).

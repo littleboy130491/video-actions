@@ -1,0 +1,131 @@
+<!doctype html>
+<!-- adapted from HyperFrames block "browser-device-stage", Apache-2.0 (see templates/NOTICE).
+     A page (tall screenshot image) inside neutral browser or phone chrome: one settle entrance (rise + soft scale +
+     tilt), then the page scrolls on keyframes; optional caption and exit. Copy to <project>/scenes/, kit.js + tpl.js
+     into <project>/engine/, edit PARAMS (image = a tall page screenshot, any width; it is fitted to the screen). -->
+<html lang="en"><head><meta charset="utf-8"><title>Browser stage</title>
+<script src="../engine/kit.js"></script><script src="../engine/tpl.js"></script>
+<style>
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden}
+#bg{position:absolute;inset:0}
+#cam{position:absolute;inset:0;perspective:2400px}
+.dev{position:absolute;left:50%;top:50%;transform-style:preserve-3d;will-change:transform}
+.bar{position:absolute;left:0;right:0;top:0;display:flex;align-items:center}
+.dots{display:flex;gap:14px;margin-left:30px}.dots i{display:block;width:18px;height:18px;border-radius:50%}
+.pill{position:absolute;left:50%;transform:translateX(-50%);height:52px;border-radius:26px;display:flex;align-items:center;
+  justify-content:center;font:500 26px/1 ui-monospace,SFMono-Regular,Menlo,monospace;white-space:nowrap;overflow:hidden}
+.scr{position:absolute;overflow:hidden}
+.scr img{position:absolute;left:0;top:0;width:100%;display:block;will-change:transform}
+.sb{position:absolute;right:6px;width:8px;border-radius:4px}
+.notch{position:absolute;left:50%;transform:translateX(-50%);border-radius:999px;background:#0b0b0d;z-index:2}
+.cap{position:absolute;left:80px;right:80px;text-align:center}
+.cap .t{font-weight:700;letter-spacing:-.02em;line-height:1.05}.cap .s{margin-top:18px;line-height:1.3}
+</style></head><body>
+<div id="bg"></div><div id="cam"></div>
+<script>
+/* ---- PARAMS (edit in your copy) ---- */
+window.PARAMS = window.PARAMS || {};
+</script>
+<script>
+const P = T.params({
+  duration: 6,
+  chrome: 'browser',            // 'browser' | 'phone'
+  url: 'example.com',           // address pill (browser)
+  image: '',                    // tall page screenshot (required); fitted to the screen width
+  scroll: [[1.3, 0], [3.0, 1100], [3.9, 1100], [5.3, 2300]],   // [t, y] y = page px at screen width; inOutCubic
+  theme: 'light',               // chrome: 'light' | 'dark'
+  bg: 'linear-gradient(160deg,#E9EEF5 0%,#CBD6E6 100%)',     // stage background (any CSS background)
+  width: 0,                     // device width px (0 = 940 browser / 600 phone)
+  y: 0,                         // device centre offset from frame centre (px; e.g. 120 with a caption above)
+  enter: 0.9, tilt: 10,         // entrance length (s), starting rotateX (deg)
+  exit: 'none', exitDur: 0.5,   // 'none' | 'fade' | 'up'
+  scrollbar: true,
+  caption: { title: '', sub: '', top: 170, color: '#0E2A47', size: 76, subSize: 40 },
+  font: 'system-ui, sans-serif', fonts: [],
+});
+const CH = {
+  light: { body: '#ffffff', bar: '#F3F4F6', dot: '#D4D7DD', pill: '#E6E8EC', pillText: '#5B616B', line: 'rgba(0,0,0,.08)', sb: 'rgba(0,0,0,.28)' },
+  dark: { body: '#1C1D21', bar: '#26272C', dot: '#45474F', pill: '#33343A', pillText: '#B9BCC4', line: 'rgba(255,255,255,.08)', sb: 'rgba(255,255,255,.35)' },
+}[P.theme] || {};
+const PHONE = P.chrome === 'phone';
+const DW = P.width || (PHONE ? 600 : 940);
+// scroll keyframes -> y(t): hold before the first key, inOutCubic between keys
+const SK = P.scroll.slice().sort((a, b) => a[0] - b[0]);
+function scrollY(t) {
+  if (!SK.length || t <= SK[0][0]) return SK.length ? SK[0][1] : 0;
+  for (let i = 1; i < SK.length; i++) if (t <= SK[i][0]) return K.lerp(SK[i - 1][1], SK[i][1], K.ramp(t, SK[i - 1][0], SK[i][0], 'inOutCubic'));
+  return SK[SK.length - 1][1];
+}
+const EX0 = P.duration - P.exitDur;
+function pose(t) {             // device pose (shared by frame + motion)
+  const u = K.ramp(t, 0, P.enter, 'outCubic'), w = K.ramp(t, 0, P.enter, 'outQuart');
+  const drift = -10 * K.ramp(t, P.enter, P.duration, 'inOutSine');                  // barely-there hold drift
+  const ex = P.exit === 'none' ? 0 : K.ramp(t, EX0, P.duration, 'inCubic');
+  return { y: 160 * (1 - u) + drift - (P.exit === 'up' ? 1500 * ex : 0), s: .92 + .08 * w, rx: P.tilt * (1 - w),
+           op: K.ramp(t, 0, P.enter * .45, 'linear') * (P.exit === 'fade' ? 1 - ex : 1) };
+}
+T.scene({
+  duration: P.duration, fonts: P.fonts,
+  async setup() {
+    document.body.style.fontFamily = P.font;
+    document.getElementById('bg').style.background = P.bg;
+    const cam = document.getElementById('cam');
+    const c = P.caption || {};
+    let cap = null;
+    if (c.title || c.sub) {
+      cap = T.el('div', cam, { cls: 'cap', css: `top:${c.top}px;color:${c.color}` });
+      if (c.title) T.el('div', cap, { cls: 't', text: c.title, css: `font-size:${c.size}px` });
+      if (c.sub) T.el('div', cap, { cls: 's', text: c.sub, css: `font-size:${c.subSize}px;opacity:.8` });
+    }
+    let DH, scr, sx, sy, sw, sh;
+    const dev = T.el('div', cam, { cls: 'dev' });
+    if (PHONE) {
+      DH = Math.round(DW * 2.07); const bz = Math.round(DW * .035);
+      dev.style.cssText += `;width:${DW}px;height:${DH}px;margin:${-DH / 2 + P.y}px 0 0 ${-DW / 2}px;border-radius:${DW * .14}px;` +
+        `background:#0b0b0d;box-shadow:0 0 0 3px #2a2b30,0 60px 120px rgba(10,20,40,.35),0 18px 40px rgba(10,20,40,.25)`;
+      sx = bz; sy = bz; sw = DW - 2 * bz; sh = DH - 2 * bz;
+      scr = T.el('div', dev, { cls: 'scr', css: `left:${sx}px;top:${sy}px;width:${sw}px;height:${sh}px;border-radius:${DW * .115}px;background:${CH.body}` });
+      T.el('div', dev, { cls: 'notch', css: `top:${bz + 22}px;width:${DW * .3}px;height:${DW * .075}px` });
+    } else {
+      const bar = 96; DH = Math.min(1500, Math.round(DW * 1.6));
+      dev.style.cssText += `;width:${DW}px;height:${DH}px;margin:${-DH / 2 + P.y}px 0 0 ${-DW / 2}px;border-radius:28px;overflow:hidden;` +
+        `background:${CH.body};box-shadow:0 0 0 1.5px ${CH.line},0 60px 120px rgba(10,20,40,.30),0 18px 40px rgba(10,20,40,.18)`;
+      const b = T.el('div', dev, { cls: 'bar', css: `height:${bar}px;background:${CH.bar};border-bottom:1.5px solid ${CH.line}` });
+      const dots = T.el('div', b, { cls: 'dots' }); for (let i = 0; i < 3; i++) T.el('i', dots, { css: `background:${CH.dot}` });
+      T.el('div', b, { cls: 'pill', text: P.url, css: `width:${Math.round(DW * .56)}px;background:${CH.pill};color:${CH.pillText}` });
+      sx = 0; sy = bar; sw = DW; sh = DH - bar;
+      scr = T.el('div', dev, { cls: 'scr', css: `left:0;top:${sy}px;width:${sw}px;height:${sh}px` });
+    }
+    const img = T.el('img', scr, { attrs: { src: P.image, alt: '' } });
+    await T.images(scr);
+    const ih = img.naturalHeight * sw / Math.max(1, img.naturalWidth);
+    const sb = P.scrollbar ? T.el('div', scr, { cls: 'sb', css: `background:${CH.sb};height:${Math.max(60, sh * sh / Math.max(ih, sh))}px` }) : null;
+    return { dev, img, sb, cap, ih, sh, max: Math.max(0, ih - sh) };
+  },
+  frame(t, S) {
+    const p = pose(t);
+    S.dev.style.transform = `translateY(${T.f(p.y)}px) rotateX(${T.f(p.rx)}deg) scale(${T.f(p.s)})`;
+    S.dev.style.opacity = T.f(p.op);
+    const y = K.clamp(scrollY(t), 0, S.max);
+    S.img.style.transform = `translate3d(0,${T.f(-y)}px,0)`;
+    if (S.sb) {
+      const vis = K.clamp(Math.max(K.pulse(t, SK[0] ? SK[0][0] : 0, SK.length ? SK[SK.length - 1][0] + .4 : 0, .2, .4), 0));
+      S.sb.style.top = `${T.f(6 + (S.sh - 12 - parseFloat(S.sb.style.height)) * (S.max ? y / S.max : 0))}px`;
+      S.sb.style.opacity = T.f(vis);
+    }
+    if (S.cap) {
+      const u = K.ramp(t, P.enter * .35, P.enter + .35, 'outCubic');
+      S.cap.style.opacity = T.f(u * (P.exit === 'none' ? 1 : 1 - K.ramp(t, EX0, P.duration, 'linear')));
+      S.cap.style.transform = `translateY(${T.f(36 * (1 - u))}px)`;
+    }
+  },
+  motion(a, b, S) {
+    const A = pose(a), B = pose(b);
+    const sc = Math.max(A.s, B.s);
+    const dy = Math.abs(K.clamp(scrollY(b), 0, S.max) - K.clamp(scrollY(a), 0, S.max)) * sc;
+    const rot = Math.abs(B.rx - A.rx) * Math.PI / 180 * DW;                 // tilt: edge travel
+    return Math.max(dy, Math.abs(B.y - A.y) + Math.abs(B.s - A.s) * DW, rot);
+  },
+});
+</script>
+</body></html>

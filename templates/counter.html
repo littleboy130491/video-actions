@@ -1,0 +1,143 @@
+<!doctype html>
+<!-- adapted from HyperFrames block "number-wheel" (with "count-up"'s landing pulse), Apache-2.0 (see templates/NOTICE).
+     Stats punch: one full-frame panel per stat; each value lands with a scale punch while its digits roll on
+     odometer strips (right-most column first), label + sub-line rise in; panels are joined by TX ('zoom' | 'whip' |
+     'cut'). Copy to <project>/scenes/, kit.js + tpl.js + transition.js into <project>/engine/, edit PARAMS. -->
+<html lang="en"><head><meta charset="utf-8"><title>Counter</title>
+<script src="../engine/kit.js"></script><script src="../engine/tpl.js"></script><script src="../engine/transition.js"></script>
+<style>
+html,body{margin:0;width:1080px;height:1920px;overflow:hidden;background:#000}
+.layer{position:absolute;left:0;top:0;width:1080px;height:1920px;overflow:hidden}
+.grp{position:absolute;left:0;top:0;width:1080px;height:1920px;display:flex;flex-direction:column;align-items:center;
+  justify-content:center;text-align:center}
+.val{display:flex;align-items:flex-start;white-space:nowrap;line-height:1}
+.col{position:relative;overflow:hidden;height:1em;
+  -webkit-mask-image:linear-gradient(transparent,#000 9%,#000 91%,transparent);mask-image:linear-gradient(transparent,#000 9%,#000 91%,transparent)}
+.strip{position:absolute;left:0;top:0;width:100%;will-change:transform}
+.strip span,.ch{display:block;height:1em;line-height:1em;text-align:center}
+.lab{font-weight:500;letter-spacing:.16em;text-transform:uppercase}
+.sub{opacity:.82}
+</style></head><body>
+<script>
+/* ---- PARAMS (edit in your copy) ---- */
+window.PARAMS = window.PARAMS || {};
+</script>
+<script>
+const P = T.params({
+  duration: 4.5,
+  stats: [
+    { value: '2019', prefix: '', suffix: '', label: 'since', sub: '' },
+    { value: '800', prefix: '', suffix: '+', label: 'clients', sub: 'and counting' },
+    { value: '4.9', prefix: '', suffix: '', label: 'rating', sub: 'from 250+ reviews' },
+  ],
+  themes: [                     // per panel, cycled: background, value colour, accent (label / suffix), sub colour
+    { bg: '#0E2A47', color: '#ffffff', accent: '#2BB5BC', subColor: 'rgba(255,255,255,.8)' },
+    { bg: '#F4F1EA', color: '#0E2A47', accent: '#1F8A90', subColor: '#0E2A47' },
+  ],
+  transition: 'zoom',           // between panels: 'zoom' | 'whip' | 'cut'
+  trDur: 0.5, dir: 'left',      // transition length (s); whip direction
+  roll: 1.0, stagger: 0.07,     // digit roll length (s) and per-column delay (right-most column first)
+  spin: 0,                      // extra 0-9 revolutions per column before it lands (0-2; more = faster reel)
+  size: 360, maxWidth: 900,     // value font size (px); shrunk per panel so the value row fits maxWidth
+  weight: 300, tracking: -0.04, // value weight, letter-spacing (em)
+  labelSize: 44, subSize: 46,
+  font: 'system-ui, sans-serif', fonts: [],     // fonts: [{family, url, weight}]
+});
+const N = P.stats.length, SLOT = P.duration / N;
+const START = i => i === 0 ? 0 : i * SLOT;                     // panel i fully owns [START(i), START(i+1))
+const TRW = i => [START(i + 1) - P.trDur / 2, START(i + 1) + P.trDur / 2];   // transition i -> i+1 window
+const ROLL0 = i => i === 0 ? .12 : START(i) - P.trDur * .1;    // digits start rolling as the panel lands
+T.scene({
+  duration: P.duration, fonts: P.fonts,
+  setup() {
+    document.body.style.fontFamily = P.font;
+    const cv = document.createElement('canvas').getContext('2d');
+    cv.font = `${P.weight} ${P.size}px ${P.font}`;
+    const dw = Math.max(...'0123456789'.split('').map(d => cv.measureText(d).width));
+    const panels = P.stats.map((s, i) => {
+      const th = P.themes[i % P.themes.length];
+      const L = T.el('div', document.body, { cls: 'layer', css: `background:${th.bg}` });
+      const g = T.el('div', L, { cls: 'grp' });
+      const lab = s.label ? T.el('div', g, { cls: 'lab', text: s.label, css: `font-size:${P.labelSize}px;color:${th.accent};margin-bottom:${P.size * .1}px` }) : null;
+      const row = T.el('div', g, { cls: 'val', css: `font-size:${P.size}px;font-weight:${P.weight};color:${th.color};letter-spacing:${P.tracking}em` });
+      const cols = [];
+      const pre = s.prefix || '', txt = pre + s.value;
+      [...txt].forEach((ch, ci) => {
+        if (/[0-9]/.test(ch) && ci >= pre.length) {
+          const c = T.el('div', row, { cls: 'col', css: `width:${dw.toFixed(1)}px` });
+          const st = T.el('div', c, { cls: 'strip' });
+          const seq = [];
+          for (let r = 0; r < (P.spin | 0); r++) for (let d = 0; d <= 9; d++) seq.push(d);
+          for (let d = 0; d <= +ch; d++) seq.push(d);
+          for (const d of seq) T.el('span', st, { text: String(d) });
+          cols.push({ el: st, n: seq.length - 1 });
+        } else T.el('div', row, { cls: 'ch', text: ch });
+      });
+      if (s.suffix) T.el('div', row, { cls: 'ch', text: s.suffix, css: `color:${th.accent}` });
+      const fit = Math.min(1, P.maxWidth / Math.max(1, row.scrollWidth));   // long values: shrink to fit
+      if (fit < 1) { row.style.fontSize = `${(P.size * fit).toFixed(1)}px`; cols.forEach(c => { c.el.parentNode.style.width = `${(dw * fit).toFixed(1)}px`; }); }
+      const sub = s.sub ? T.el('div', g, { cls: 'sub', text: s.sub, css: `font-size:${P.subSize}px;color:${th.subColor};margin-top:${P.size * .12}px` }) : null;
+      return { L, g, lab, sub, cols, fs: P.size * fit };
+    });
+    return { panels };
+  },
+  // numeric state of panel i at t (shared by frame and motion)
+  st(i, t) {
+    const p0 = ROLL0(i);
+    const punch = K.ramp(t, p0, p0 + .34, 'outExpo');
+    const amp = i === 0 || P.transition === 'cut' ? .45 : .12;   // after a zoom/whip the transition already moves it
+    const settle = .025 * Math.sin(Math.PI * K.ramp(t, p0 + .22, p0 + .6, 'inOutSine'));
+    const drift = .03 * K.ramp(t, p0 + .34, START(i + 1), 'linear');
+    const cols = this._cols(i, t);
+    return { sc: (1 + amp * (1 - punch) - settle) * (1 + drift), op: amp > .2 ? K.ramp(t, p0, p0 + .1, 'linear') : 1,
+             blur: amp > .2 ? 10 * (1 - K.ramp(t, p0, p0 + .22, 'outQuad')) : 0,
+             lab: K.ramp(t, p0 + .18, p0 + .58, 'outCubic'), sub: K.ramp(t, p0 + .34, p0 + .8, 'outCubic'), cols };
+  },
+  _cols(i, t) {
+    const S = this._S; if (!S) return [];
+    const cs = S.panels[i].cols, p0 = ROLL0(i);
+    return cs.map((c, k) => { const a = p0 + (cs.length - 1 - k) * P.stagger; return c.n * K.ramp(t, a, a + P.roll, 'outQuart'); });
+  },
+  frame(t, S) {
+    this._S = S;
+    const ps = S.panels;
+    // which layers are on screen: inside a transition window both, else the owner
+    let tr = -1;
+    if (P.transition !== 'cut') for (let i = 0; i < N - 1; i++) { const [a, b] = TRW(i); if (t >= a && t < b) tr = i; }
+    let own = 0; for (let i = 0; i < N; i++) if (t >= START(i)) own = i;
+    ps.forEach((p, i) => {
+      if (tr >= 0 && (i === tr || i === tr + 1)) return;
+      const on = tr < 0 && i === own;
+      p.L.style.visibility = on ? 'visible' : 'hidden';
+      p.L.style.transform = 'none'; p.L.style.filter = 'none'; p.L.style.opacity = '1';
+    });
+    if (tr >= 0) { const [a] = TRW(tr); TX.apply(P.transition, ps[tr].L, ps[tr + 1].L, (t - a) / P.trDur, { dir: P.dir }); }
+    ps.forEach((p, i) => {
+      if (p.L.style.visibility === 'hidden') return;
+      const s = this.st(i, t);
+      p.g.style.transform = `scale(${T.f(s.sc)})`;
+      p.g.style.opacity = T.f(s.op);
+      p.g.style.filter = s.blur > .05 ? `blur(${T.f(s.blur)}px)` : 'none';
+      if (p.lab) { p.lab.style.opacity = T.f(s.lab); p.lab.style.transform = `translateY(${T.f(30 * (1 - s.lab))}px)`; }
+      if (p.sub) { p.sub.style.opacity = T.f(s.sub); p.sub.style.transform = `translateY(${T.f(30 * (1 - s.sub))}px)`; }
+      p.cols.forEach((c, k) => { c.el.style.transform = `translateY(${T.f(-s.cols[k])}em)`; });
+    });
+  },
+  motion(a, b, S) {
+    this._S = S;
+    let d = 0;
+    for (let i = 0; i < N; i++) {
+      const A = this.st(i, a), B = this.st(i, b), sc = Math.max(A.sc, B.sc);
+      d = Math.max(d, Math.abs(B.sc - A.sc) * 700, 30 * Math.abs(B.lab - A.lab), 30 * Math.abs(B.sub - A.sub));
+      A.cols.forEach((x, k) => { d = Math.max(d, Math.abs(B.cols[k] - x) * S.panels[i].fs * sc); });
+    }
+    if (P.transition !== 'cut') for (let i = 0; i < N - 1; i++) {
+      const [w0] = TRW(i);
+      d = Math.max(d, TX.px(P.transition, (a - w0) / P.trDur, (b - w0) / P.trDur, { dir: P.dir }));
+    }
+    return d;
+  },
+  get cuts() { return P.transition === 'cut' ? P.stats.slice(1).map((_, i) => START(i + 1)) : []; },
+});
+</script>
+</body></html>

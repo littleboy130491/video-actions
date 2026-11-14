@@ -1,0 +1,16 @@
+templates/ in this repository contains code adapted from HyperFrames (https://github.com/heygen-com/hyperframes,
+npm package "hyperframes"), Copyright HeyGen, licensed under the Apache License, Version 2.0
+(https://www.apache.org/licenses/LICENSE-2.0).
+
+Adapted registry items (hyperframes@0.9.41 catalog):
+  transition.js, transition.html   <- "zoom-through-transition", "whip-pan-cut" (and block "whip-pan")
+  counter.html                     <- "number-wheel" (landing pulse after "count-up")
+  browser_stage.html               <- "browser-device-stage"
+  chat_thread.html                 <- "chat-thread", "chat-message"
+
+Changes: rewritten as standalone deterministic scenes for this repo's seek(t) contract (window.DURATION,
+window.ready, pure window.seek(t), cutTimes, motionPx); GSAP timelines replaced by closed-form easing from
+core/kit.js; restyled, re-timed and parameterised (PARAMS object / URL query). No GSAP code is included.
+Each adapted file carries a header naming its source block.
+
+tools/studio/ does not include HyperFrames code; it installs the npm package at run time (gitignored).

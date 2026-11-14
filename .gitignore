@@ -3,3 +3,6 @@ sealed/
 sealed_in/
 .render_key
 __pycache__/
+tools/studio/node_modules/
+tools/studio/package.json
+tools/studio/package-lock.json
