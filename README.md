@@ -1,5 +1,8 @@
 # motion render
 
+> **AI agents: start with [AGENTS.md](AGENTS.md)** (purpose, formats, rules) and [docs/method.md](docs/method.md)
+> (how to reach the quality). This README only documents the renderer and CI.
+
 Headless render runner. Project bundles in `bundles/` are AES-256 encrypted; the key lives only in the
 `RENDER_KEY` repository secret. Rendered outputs are encrypted before being uploaded as artifacts.
 

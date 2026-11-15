@@ -1,0 +1,13 @@
+{
+  "name": "client",
+  "order": ["hook", "process", "pages", "ending", "outro"],
+  "prebuilt": {"outro": 6.5},
+  "final": "client_final.mp4",
+  "draft_final": "client_draft.mp4",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "port": 8780,
+  "fonts": [],
+  "out": "out"
+}
