@@ -34,6 +34,15 @@
 - Token cost is dominated by long agent histories and images, not rendering → fresh agents per big revision, one
   contact sheet per review.
 
+- Never round camera transforms (e.g. toFixed(3) on scale): on a 14,000 px row it made edges jitter ±10 px/frame
+  ("shaking"). Keep ≥ 6 decimals / sub-pixel transforms.
+- Page bursts: one continuous camera travel with smooth velocity beats start-stop wipes ("choppy"); check per-frame
+  velocity and frame-diff spikes. Big screenshots shown small: add 0.5x mip copies; live iframes shimmer when tiny →
+  swap to a pre-rendered screenshot below ~0.5x.
+- Readable Home scroll: peak ≈ 28 px/frame (45 was "too fast"); page bursts ≈ 0.75 s per page.
+- Layers wider than the page (smoke, swirls) spill out when the page has overflow visible → clip them to the page.
+- Masonry/portfolio walls: dedupe by SITE (not file); never show the same client twice.
+
 ## Reference library
 Skyscanner (beat cuts, bento token grid, colour-field match cuts), Naver (keyword search → world, devices in white
 space, giant 3D type), Obys (black stage, giant block type, flat screens with block masks, bending pages, mobile grid,
