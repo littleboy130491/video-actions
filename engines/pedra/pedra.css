@@ -1,0 +1,59 @@
+@import url("./fonts.css");
+@import url("./kit.css");
+
+:root {
+  --pedra-quarry: #161817;
+  --pedra-paper: #F5F4F1;
+  --pedra-ink: #2E312C;
+  --pedra-rose: #946A70;
+  --pedra-teal: #508580;
+}
+
+html, body, #stage {
+  background: #161817;
+}
+
+#cursor .tag {
+  background: #508580;
+  color: #FFFFFF;
+}
+
+.quarry-rulers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+.quarry-rulers .qr-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(255, 255, 255, 0.045);
+}
+.quarry-rulers .qr-l { left: 36px; }
+.quarry-rulers .qr-r { right: 36px; }
+.quarry-rulers .qr-tick {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(80, 133, 128, 0.14);
+}
+.quarry-rulers .qr-t1 { top: 260px; }
+.quarry-rulers .qr-t2 { bottom: 380px; }
+
+.blueprint-12col {
+  position: absolute;
+  pointer-events: none;
+  z-index: 12;
+  opacity: 0;
+}
+.blueprint-12col span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid rgba(80, 133, 128, 0.22);
+  border-right: 1px solid rgba(80, 133, 128, 0.22);
+  background: rgba(80, 133, 128, 0.035);
+}
