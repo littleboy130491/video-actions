@@ -78,9 +78,11 @@ def main(argv=None):
         add(buf, whoosh(d, .12 * amp), at)
     for c in EV.get("ticks", []):
         add(buf, tick(.42), c)
+    mute_exprs = []
     for n, s0, d in EV.get("scenes", []):            # nothing over prebuilt (client outro) segments
         if n in core.PREBUILT:
             buf[int(s0 * SR):int((s0 + d) * SR)] = 0
+            mute_exprs.append(f"between(t,{s0:.4f},{s0 + d:.4f})")
     buf /= max(1e-6, np.abs(buf).max())
     buf *= .5
     pcm = (np.clip(buf, -1, 1) * 32767).astype(np.int16)
@@ -93,8 +95,9 @@ def main(argv=None):
         sys.exit(f"{src} missing: render/concat first")
     dst = src.with_name(src.stem + "_sfx.mp4")
     tmp = OUT / ("tmp_sfx_" + dst.name)
+    mute_f = f",volume=0:enable='{'+'.join(mute_exprs)}'" if mute_exprs else ""
     subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", str(src), "-i", str(wav),
-                    "-filter_complex", "[1:a]loudnorm=I=-24:TP=-3:LRA=11,aresample=48000,volume=-2.7dB,pan=stereo|c0=c0|c1=c0[a]",
+                    "-filter_complex", f"[1:a]loudnorm=I=-24:TP=-3:LRA=11,aresample=48000,volume=-2.7dB{mute_f},pan=stereo|c0=c0|c1=c0[a]",
                     "-map", "0:v", "-map", "[a]", "-c:v", "copy", "-c:a", "aac", "-b:a", "160k", "-shortest",
                     "-movflags", "+faststart", str(tmp)], check=True)
     tmp.replace(dst)

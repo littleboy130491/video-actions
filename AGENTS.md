@@ -39,7 +39,11 @@ otherwise.
    no fake Figma side panels or search pills, no decoration for its own sake ("AI slop": random glows, sparkles,
    particles, gradients without purpose).
 4. **Each new video must be clearly different** from the previous ones (camera language, structure, transitions,
-   reference style). Reuse the ENGINE, never the look. Check `docs/lessons.md` → "previous videos".
+   reference style). Reuse the ENGINE, never the look. Changing palette or background color alone is NOT enough —
+   never repeat the same 7-scene Figma-cursor sequence (Hook typing → static Brief palette/Aa slide → drawRect +
+   typo-fix → Alt-drag + dragSnap → horizontal page row → flat Home scroll). Vary camera grammar, structure, pacing,
+   and transitions (e.g., cursor-less kinetic hardware, split-screen wipes, giant text-masks, color-block slam cuts,
+   bento zoom-dives). Check `docs/lessons.md` → "previous videos".
 5. **Text never sits on top of photos/screenshots** in the promo/explainer formats (owner: "feels cheap"). Use plain
    or soft-gradient backgrounds; images go beside/below text, or text is masked WITH images inside the letters.
 6. **Honest content only.** Numbers, scores and claims must be real (e.g. Lighthouse scores were measured, not
@@ -69,7 +73,8 @@ otherwise.
   unless the reference style demands it.
 - **Motion blur via the renderer's adaptive 180° shutter** (`core/render.py`), never 2-frame blending; scenes with hard
   cuts must declare `window.cutTimes()` so blur never mixes two shots.
-- **Sound:** sfx events from scenes (`window.SFX`) mixed by `core/sfx.py`. Music is not set up yet (see roadmap).
+- **Sound:** sfx events from scenes (`window.SFX`) mixed by `core/sfx.py`; prebuilt client outros (`PREBUILT`) must
+  stay **100% digital silence (`-91.0 dB`)** with zero tail bleed. Music is not set up yet (see roadmap).
 
 ## 5. How a job runs (standard workflow)
 
@@ -81,17 +86,25 @@ otherwise.
    (HARD / MATCH / CONTINUOUS / ZOOM-THROUGH), assets per scene, rules. Templates: `docs/project-template/`.
 4. **Build** — recreate designs as static HTML (`design/*.html` with `data-el` contract), write scenes
    (`scenes/*.html`) on the scene contract, `video.json` for scene order. Reuse `core/kit.js`, `templates/`.
-5. **Preview** while iterating: `tools/studio/studio.py --project P --scene X` (HyperFrames Studio scrub) or
-   `core/render.py --stills t1 t2 …`.
-6. **Draft** — `core/render.py --project P --draft` → contact sheet review against §4 and the format guide → fix →
-   send the draft to the owner with a short timeline (scene ↔ seconds).
+5. **Preview & Preflight** while iterating: `tools/studio/studio.py --project P --scene X` (HyperFrames Studio **preview/scrub
+   only** — never run `hyperframes render` CLI; it hits `COMPOSITION_SETUP_TIMEOUT` after 45 s because it freezes
+   `Date`/`performance.now` and holds `rAF` while `core/kit.js` awaits `2× rAF` in `window.ready`) or `core/render.py --stills t1 t2 …`.
+   In custom Playwright preflight checks, always guard `window.ready` with a strict timeout (`Promise.race` / 15 s cap) and attach
+   `console`, `pageerror`, and `response >= 400` listeners so unresolved promises never hang.
+6. **Draft & Parallel Rendering** — `core/render.py --project P --draft` (or `scripts/render_chunk.py` + `scripts/join_parts.sh`
+   for **~2.1×** faster `--draft` and **~1.95×** faster 180° shutter on 4-core/15 GiB hosts). When chunk-rendering locally:
+   pre-start one shared HTTP server on `video.json`'s port before spawning `K` workers (avoids `ensure_server()` port-bind races),
+   cap `K ≤ nproc`, render one variant/project at a time to avoid RAM/swap thrashing, and pass an absolute `<workdir>` path
+   (or rely on `join_parts.sh`'s resolved `WORKDIR`). Review contact sheet against §4 and the format guide → fix → send draft
+   with a short timeline (scene ↔ seconds).
 7. **Revisions** — owner feedback arrives per second ("at 0:27 …"). Map seconds → scene, re-render only changed
    scenes, concat. Keep a timeline map in SPEC. For large revisions write `SPEC_rN.md` (diagnosis + concrete fixes)
    and start fresh from it.
-8. **Final** — after approval: `core/render.py --project P` (full shutter) + `core/sfx.py --project P`, check
-   8 frames + ffprobe, deliver `<name>_final_sfx.mp4`.
-9. Optional: multi-agent review (motion / art direction / marketing lenses, each scoring /10 with timestamped fixes)
-   before showing the owner, and consolidate into one fix list.
+8. **Final** — after approval: `core/render.py --project P` (or `render_chunk.py` + `join_parts.sh` + `--concat-only`) and
+   `core/sfx.py --project P`, check 8 frames + ffprobe + outro silence, deliver `<name>_final_sfx.mp4`.
+9. **Multi-agent / Swarm QA** (recommended before showing the owner): run parallel scene builders + an independent QA critic
+   (e.g., Mistral Vibe CLI `--model mistral-large-4-0` or motion/art-direction/marketing lenses) checking Reels safe zones
+   (`y = 260..1540`, right `140 px` clear / `x ≤ 940`), zero-lorem, asset fidelity, and seam math; consolidate into one fix list.
 
 ## 6. Where things are
 
@@ -129,6 +142,9 @@ window.SFX = [{t: 1.2, type: 'whoosh'}];  // optional sound events
 ```
 `seek` must be **pure** (no accumulated state, no wall-clock, no requestAnimationFrame-driven state); frames are
 rendered out of order and in parallel chunks.
+**`K.scene` 180° shutter rule:** `K.scene` passes `tc` (frame centre time) to `frame(S, tc, st)` while setting `S.tcam = t`
+(the shutter sub-sample time). Always evaluate camera poses at `S.tcam` (e.g. `st.cam(S.tcam)` / `camPrecise(S, c, S.tcam)`),
+never `tc` (`t` param); passing `tc` freezes the camera across sub-samples so `window.motionPx(a, b)` measures `0` (`N=1`, zero motion blur).
 
 ## 8. Working efficiently (tokens = cost)
 
