@@ -1,0 +1,39 @@
+{
+  "name": "solea",
+  "order": [
+    "s1_hook_elevation",
+    "s2_spec_brief",
+    "s3_process_siteplan",
+    "s4_process_lea",
+    "s5_process_map_craft",
+    "s6_pages_folio",
+    "s7_ending_cruise",
+    "outro_client"
+  ],
+  "prebuilt": {
+    "outro_client": 6.5
+  },
+  "final": "solea_final.mp4",
+  "draft_final": "solea_draft.mp4",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "port": 8798,
+  "fonts": [
+    "fonts/cormorant-garamond-400.woff2",
+    "fonts/cormorant-garamond-500.woff2",
+    "fonts/cormorant-garamond-600.woff2",
+    "fonts/cormorant-garamond-700.woff2",
+    "fonts/cormorant-garamond-400-italic.woff2",
+    "fonts/source-sans-pro-300.woff2",
+    "fonts/source-sans-pro-400.woff2",
+    "fonts/source-sans-pro-500.woff2",
+    "fonts/source-sans-pro-600.woff2",
+    "fonts/source-sans-pro-700.woff2",
+    "fonts/inter-400.woff2",
+    "fonts/inter-500.woff2",
+    "fonts/inter-600.woff2",
+    "fonts/inter-700.woff2"
+  ],
+  "out": "out"
+}

@@ -1,0 +1,61 @@
+@import url("./fonts.css");
+@import url("./kit.css");
+
+:root {
+  --solea-vellum: #F4F2ED;
+  --solea-stone: #F7F7F7;
+  --solea-white: #FFFFFF;
+  --solea-ink: #131313;
+  --solea-brass: #B69055;
+  --solea-forest: #32603F;
+  --solea-rule: #DEDAD2;
+}
+
+html, body, #stage {
+  background: #F4F2ED;
+}
+
+#cursor .tag {
+  background: #32603F;
+  color: #FFFFFF;
+}
+
+.vellum-rulers {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 4;
+}
+.vellum-rulers .vr-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(19, 19, 19, 0.045);
+}
+.vellum-rulers .vr-l { left: 48px; }
+.vellum-rulers .vr-r { right: 48px; }
+.vellum-rulers .vr-tick {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(182, 144, 85, 0.16);
+}
+.vellum-rulers .vr-t1 { top: 260px; }
+.vellum-rulers .vr-t2 { bottom: 380px; }
+
+.arch-12col {
+  position: absolute;
+  pointer-events: none;
+  z-index: 12;
+  opacity: 0;
+}
+.arch-12col span {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  border-left: 1px solid rgba(50, 96, 63, 0.22);
+  border-right: 1px solid rgba(50, 96, 63, 0.22);
+  background: rgba(50, 96, 63, 0.032);
+}
