@@ -1,0 +1,32 @@
+{
+  "name": "pedra",
+  "order": [
+    "s1_hook_brief",
+    "s2_build_hero_prod",
+    "s3_build_craft",
+    "s4_pages",
+    "s5_ending",
+    "outro_client"
+  ],
+  "prebuilt": {
+    "outro_client": 6.5
+  },
+  "final": "pedra_final.mp4",
+  "draft_final": "pedra_draft.mp4",
+  "width": 1080,
+  "height": 1920,
+  "fps": 30,
+  "port": 8796,
+  "fonts": [
+    "fonts/poppins-300-0.woff2",
+    "fonts/poppins-400-1.woff2",
+    "fonts/poppins-500-2.woff2",
+    "fonts/poppins-600-3.woff2",
+    "fonts/google-sans-flex-300-500-0.woff2",
+    "fonts/inter-400-0.woff2",
+    "fonts/inter-500-1.woff2",
+    "fonts/inter-600-2.woff2",
+    "fonts/inter-700-3.woff2"
+  ],
+  "out": "out"
+}
