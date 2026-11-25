@@ -1095,7 +1095,8 @@ K.motionOf = function (stages, a, b) {
 };
 
 /* ---------------- scene bootstrap ---------------- */
-/** K.scene({duration, bg, setup(S) -> state, frame(S, t, state)}) wires window.DURATION/seek/ready */
+/** K.scene({duration, bg, setup(S) -> state, frame(S, tc, state)}) wires window.DURATION/seek/ready.
+ *  Note: frame() receives tc (frame centre) so UI/typing stays crisp; evaluate camera poses at S.tcam for 180° shutter. */
 K.scene = function (def) {
   window.DURATION = def.duration;
   const S = new Stage(def.stage || {});

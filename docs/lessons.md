@@ -8,6 +8,7 @@
 | BYGY / Be Best | design timelapse | Naver "2022 in keywords" | product-photo hook burst, light Figma-like one-take, brief as motion slide, desktop→tablet→mobile, Home scroll | bygy |
 | TeAM (Telematika) | design timelapse | Obys Showreel 2024 | live-site preloader + curtain opening with hero video, dark canvas one-take, pages in a row as in Figma, Home scroll with hero video | tam |
 | Imajiner promo | motion ad | (owner direction: minimalist luxury) | kinetic type hook, masonry portfolio, 4 benefit vignettes, stat punches | imj |
+| PT RIX Orient Indonesia (v001) | design timelapse | (same 7-scene Figma-cursor grammar; owner: repetitive) | `#363581` flat 2D CAD stage, Hook typing → Brief slide → Hero/Stats/Footer cursor builds → horizontal pages row → Home scroll + outro | rix |
 
 ## Owner feedback that became rules
 - Never touch the client's Figma. No labels/captions. No meaningless cursor actions or empty placeholders.
@@ -20,7 +21,15 @@
 - Promo: text never over images; plain/gradient luxury look; but keep energetic camera transitions.
 - Portfolio: no flicker, no cheap carousel → masonry with elegant parallax.
 - Stats: one by one, like punches, big, readable labels.
-- Each new video must differ significantly from the last.
+- Each new video must differ significantly from the last. On RIX `v001`, changing palette/background color alone felt
+  boring and repetitive because it reused the same 7-scene Figma-cursor sequence (`Hook typing → static Brief palette/Aa
+  slide → drawRect + typo-fix → Alt-drag + dragSnap → horizontal page row → flat Home scroll`). Future videos must
+  genuinely vary **camera grammar, structure, pacing, and transitions** (e.g., cursor-less kinetic hardware,
+  split-screen wipe, giant text-masks, color-block slam cuts, bento zoom-dive).
+- Multi-agent QA: pair parallel scene builders with an independent QA critic verifying Reels safe zones
+  (`y = 260..1540`, right `140 px` clear / `x ≤ 940`), zero-lorem compliance, and C0/C1 seam math (e.g., RIX QA caught
+  right-aligned CTAs/grids extending past `x = 940` at `0.75×` full-width zoom when the camera stayed centered at
+  `x = 720`).
 
 ## Technical lessons
 - 2-sample frame blending = ghosting → adaptive shutter; declare cutTimes (blur across a cut = double exposure).
@@ -42,6 +51,27 @@
 - Readable Home scroll: peak ≈ 28 px/frame (45 was "too fast"); page bursts ≈ 0.75 s per page.
 - Layers wider than the page (smoke, swirls) spill out when the page has overflow visible → clip them to the page.
 - Masonry/portfolio walls: dedupe by SITE (not file); never show the same client twice.
+- **Parallel chunking benchmark (`scripts/render_chunk.py` + `scripts/join_parts.sh`):** On `s4_build_stats` (`210` frames,
+  `4`-core `15 GiB` Linux host), `K=4` delivered **`~2.11×` speedup** on `--draft` (`48.72 s` vs `102.58 s`, `SSIM 0.9973 /
+  PSNR 46.26 dB`) and **`~1.95×` speedup** on true 180° adaptive shutter (`174.18 s` vs `338.99 s`, `992` samples,
+  `SSIM 0.9975 / PSNR 49.23 dB`). Operational rules: pre-start one shared HTTP server on `video.json`'s port before
+  spawning `K` workers (prevents `ensure_server()` port-bind races), cap `K ≤ nproc` and render one variant/project at a
+  time to avoid RAM/swap thrashing, and resolve `<workdir>` to an absolute path in `scripts/join_parts.sh` (relative
+  paths otherwise double inside `ffmpeg -f concat`).
+- **180° adaptive shutter `S.tcam` pitfall (`core/kit.js` `K.scene`):** `K.scene` passes `tc` (frame center time) to
+  `def.frame(S, tc, st)` while storing the shutter sub-sample time on `S.tcam`. Calling `st.cam(t)` inside `frame`
+  evaluates the camera at `tc` on every sub-sample, causing `window.motionPx(a, b)` to measure `0` displacement (`N=1`,
+  zero motion blur). Calling `st.cam(S.tcam)` restores true 180° adaptive shutter (`210 → 992` samples on
+  `s4_build_stats`, silky blur on fast pans while static holds stay sharp `N=1`).
+- **HyperFrames (`tools/studio/`) is preview-only:** `hyperframes@0.9.41 render` fails with `COMPOSITION_SETUP_TIMEOUT`
+  after `45 s` because it freezes `Date`/`performance.now` and holds `requestAnimationFrame` during setup while
+  `core/kit.js` awaits `2× rAF` inside `window.ready`. Use `tools/studio/studio.py` for preview/scrubbing only and
+  `core/render.py` / `scripts/render_chunk.py` for renders.
+- **Playwright preflight safety:** Never run `window.ready` checks in Playwright without a strict timeout (`Promise.race`
+  / `15 s` cap) and `console`/`pageerror`/`response >= 400` listeners — an unresolved `window.ready` hangs indefinitely.
+- **Outro pure silence (`core/sfx.py`):** Zeroing `buf` before `loudnorm` can still leave non-zero tail/normalization
+  bleed over `PREBUILT` segments; `core/sfx.py` now also applies ffmpeg `volume=0:enable='between(t,s0,s0+d)'` after
+  `loudnorm` / `volume=-2.7dB` so prebuilt Imajiner outros stay 100% digital silence (`-91.0 dB`).
 
 ## Reference library
 Skyscanner (beat cuts, bento token grid, colour-field match cuts), Naver (keyword search → world, devices in white
