@@ -3,7 +3,8 @@
 You are joining a working video studio pipeline, not a generic code repo. This file tells you **what we make, for whom,
 to what standard, and how**. The code is only the means. Before writing anything, read in this order:
 1. this file, 2. **`docs/method.md` — the production method that produced our approved videos (required)**,
-3. the format guide for the job (`docs/formats/`), 4. `docs/lessons.md`, 5. `docs/review-checklist.md`.
+3. the format guide for the job (`docs/formats/`), 4. `docs/lessons.md`, 5. `docs/review-checklist.md`,
+6. **`docs/working-principles.md` — how references and example parts become OUR design (adapt, never replicate)**.
 The README only covers the renderer/CLI.
 
 ## 1. What this repo is for
@@ -43,7 +44,9 @@ otherwise.
    never repeat the same 7-scene Figma-cursor sequence (Hook typing → static Brief palette/Aa slide → drawRect +
    typo-fix → Alt-drag + dragSnap → horizontal page row → flat Home scroll). Vary camera grammar, structure, pacing,
    and transitions (e.g., cursor-less kinetic hardware, split-screen wipes, giant text-masks, color-block slam cuts,
-   bento zoom-dives). Check `docs/lessons.md` → "previous videos".
+   bento zoom-dives). Check `docs/lessons.md` → "previous videos". The same applies to the sent reference video
+   itself: never replicate it — decompose its traits into a keep/adapt/drop table in SPEC.md
+   (`docs/working-principles.md` §2).
 5. **Text never sits on top of photos/screenshots** in the promo/explainer formats (owner: "feels cheap"). Use plain
    or soft-gradient backgrounds; images go beside/below text, or text is masked WITH images inside the letters.
 6. **Honest content only.** Numbers, scores and claims must be real (e.g. Lighthouse scores were measured, not
@@ -117,6 +120,7 @@ otherwise.
 | `engines/<project>/` | the engine code each past project shipped with + `video.example.json` (reference implementations) |
 | `scripts/`, `.github/workflows/render.yml` | CI: encrypted bundle → chunked render on GitHub Actions → encrypted output branch |
 | `docs/method.md` | **how we reach the quality**: roles/agents, reference study, spec writing, visual toolbox with values, review loop, diagnosis→fix table |
+| `docs/working-principles.md` | how references/example parts become our own design: frames-first study, adapt-not-replicate table + 3 review passes, parts catalog with selection caps, normalization tokens, coherence pass |
 | `docs/formats/` | the three format guides (structure, storyboard skeletons, do/don't) |
 | `docs/review-checklist.md` | the review checklist + commands |
 | `docs/lessons.md` | owner feedback history per project + what each previous video looked like |
